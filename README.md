@@ -14,7 +14,7 @@ Hangjun Ye<sup>2</sup>, [Wenyu Liu](https://eic.hust.edu.cn/professor/liuwenyu/)
 
 Arxiv 2025
 
-<a href="https://arxiv.org/abs/2506.08052"><img src='https://img.shields.io/badge/arXiv-ReCogDrive-red' alt='Paper PDF'></a>   <a href="https://xiaomi-research.github.io/recogdrive/"><img src='https://img.shields.io/badge/Project_Page-ReCogDrive-green' alt='Project Page'></a> [![huggingface weights](https://img.shields.io/badge/%F0%9F%A4%97%20Weights-Recogdrive-yellow)]()&nbsp;
+<a href="https://arxiv.org/abs/2506.08052"><img src='https://img.shields.io/badge/arXiv-ReCogDrive-red' alt='Paper PDF'></a>   <a href="https://xiaomi-research.github.io/recogdrive/"><img src='https://img.shields.io/badge/Project_Page-ReCogDrive-green' alt='Project Page'></a> [![huggingface weights](https://img.shields.io/badge/%F0%9F%A4%97%20Weights-Recogdrive-yellow)](https://huggingface.co/owl10/ReCogDrive/tree/main)&nbsp;
 </div>
 
 
@@ -70,8 +70,8 @@ Although end-to-end autonomous driving has made remarkable progress, its perform
 
 | Method | Model Size | Training Stage | PDMS | Weight Download |
 | :---: | :---: | :---: | :---: |  :---: |
-| ReCogDrive(VLM) | 8B | Stage 1 | 86.2 | [Model]() | |
-| ReCogDrive | 8B + 35M | Stage 1&2&3| 90.2 | [Model]() | |
+| ReCogDrive(VLM) | 8B | Stage 1 | 86.2 | [Model](https://huggingface.co/owl10/ReCogDrive/tree/main/ReCogDrive_VLM) | |
+| ReCogDrive | 8B + 35M | Stage 1&2&3| 90.2 | [Model](https://huggingface.co/owl10/ReCogDrive/tree/main/Diffusion_Planner) | |
 
 
 ## Contact
