@@ -78,7 +78,7 @@ Although end-to-end autonomous driving has made remarkable progress, its perform
 If you have any questions, please contact [Yongkang Li](https://owl-10.github.io/yongkangli/) via email (liyk@hust.edu.cn) or wechat (liyk_0803).
 
 ## Acknowledgement
-ReCogDrive is greatly inspired by the following outstanding contributions to the open-source community: [NAVSIM](https://github.com/autonomousvision/navsim), [DPPO](https://github.com/irom-princeton/dppo), [LightningDiT](https://github.com/hustvl/LightningDiT), [DiffusionDrive](https://github.com/hustvl/DiffusionDrive),[GR00T](https://github.com/NVIDIA/Isaac-GR00T).
+ReCogDrive is greatly inspired by the following outstanding contributions to the open-source community: [NAVSIM](https://github.com/autonomousvision/navsim), [DPPO](https://github.com/irom-princeton/dppo), [LightningDiT](https://github.com/hustvl/LightningDiT), [DiffusionDrive](https://github.com/hustvl/DiffusionDrive), [Senna](https://github.com/hustvl/Senna), [GR00T](https://github.com/NVIDIA/Isaac-GR00T).
 
 
 ## Citation
