@@ -67,15 +67,15 @@ class ReCogDriveAgent(AbstractAgent):
                 device=device
             )
 
-        if self.grpo:
-            cfg.grpo_cfg.metric_cache_path = self.metric_cache_path
-            cfg.grpo_cfg.reference_policy_checkpoint = self.reference_policy_checkpoint
-
         if self.dit_type == "large":
             cfg = make_recogdrive_config(self.dit_type, action_dim=3, action_horizon=8, grpo=self.grpo, input_embedding_dim=1536,sampling_method=sampling_method)
         elif self.dit_type == "small":
             cfg = make_recogdrive_config(self.dit_type, action_dim=3, action_horizon=8, grpo=self.grpo, input_embedding_dim=384,sampling_method=sampling_method)
 
+        if self.grpo:
+            cfg.grpo_cfg.metric_cache_path = self.metric_cache_path
+            cfg.grpo_cfg.reference_policy_checkpoint = self.reference_policy_checkpoint
+            
         self.action_head = ReCogDriveDiffusionPlanner(cfg).cuda()
         self.num_inference_samples = 1
         self.inference_selection_mode = "median"
