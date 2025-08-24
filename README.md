@@ -41,7 +41,7 @@ Arxiv 2025
 
 ## Abstract         
 
-Although end-to-end autonomous driving has made remarkable progress, its performance degrades significantly in rare and long-tail scenarios. Recent approaches attempt to address this challenge by leveraging the rich world knowledge of Vision-Language Models (VLMs), but these methods suffer from several limitations: (1) a significant domain gap between the pre-training data of VLMs and real-world driving data, (2) a dimensionality mismatch between the discrete language space and the continuous action space, and (3) imitation learning tends to capture the average behavior present in the dataset, which may be suboptimal even dangerous. In this paper, we propose ReCogDrive, an autonomous driving system that integrates VLMs with diffusion planner, which adopts a three-stage paradigm for training. In the first stage, we use a large-scale driving question-answering datasets to train the VLMs, mitigating the domain discrepancy between generic content and real-world driving scenarios. In the second stage, we employ a diffusion-based planner to perform imitation learning, mapping representations from the latent language space to continuous driving actions. Finally, we fine-tune the diffusion planner using reinforcement learning with NAVSIM non-reactive simulator, enabling model to generate safer, more human-like driving trajectories. We evaluate our approach on the planning-oriented NAVSIM benchmark, achieving a PDMS of 90.2 and setting a new state-of-the-art that surpasses the previous vision-only SOTA by 6.2 PDMS.
+Although end-to-end autonomous driving has made remarkable progress, its performance degrades significantly in rare and long-tail scenarios. Recent approaches attempt to address this challenge by leveraging the rich world knowledge of Vision-Language Models (VLMs), but these methods suffer from several limitations: (1) a significant domain gap between the pre-training data of VLMs and real-world driving data, (2) a dimensionality mismatch between the discrete language space and the continuous action space, and (3) imitation learning tends to capture the average behavior present in the dataset, which may be suboptimal even dangerous. In this paper, we propose ReCogDrive, an autonomous driving system that integrates VLMs with diffusion planner, which adopts a three-stage paradigm for training. In the first stage, we use a large-scale driving question-answering datasets to train the VLMs, mitigating the domain discrepancy between generic content and real-world driving scenarios. In the second stage, we employ a diffusion-based planner to perform imitation learning, mapping representations from the latent language space to continuous driving actions. Finally, we fine-tune the diffusion planner using reinforcement learning with NAVSIM non-reactive simulator, enabling model to generate safer, more human-like driving trajectories. We evaluate our approach on the planning-oriented NAVSIM benchmark, achieving a PDMS of 90.5 and setting a new state-of-the-art that surpasses the previous vision-only SOTA by 6.5 PDMS.
 
 <div align="center">
 <img src="assets/images/framework.jpg" width="1000">
@@ -74,6 +74,24 @@ Although end-to-end autonomous driving has made remarkable progress, its perform
 | ReCogDrive-Base | 2B + 35M | Stage 1&2&3| 90.3 | [Model](https://huggingface.co/owl10/ReCogDrive/tree/main/Diffusion_Planner_2B) | |
 | ReCogDrive(VLM)-Large | 8B | Stage 1 | 86.8 | [Model](https://huggingface.co/owl10/ReCogDrive/tree/main/ReCogDrive_VLM_8B) | |
 | ReCogDrive-Large | 8B + 35M | Stage 1&2&3| 90.5 | [Model](https://huggingface.co/owl10/ReCogDrive/tree/main/Diffusion_Planner_8B) | |
+
+## Driving Pretraining Datasets
+| Datasets | Source | Rewritten Annotations Jsonl |
+| :---: | :---: | :---: |
+| NAVSIM-Traj | NAVSIM | [JSONL]()  |
+| NAVSIM-ReCogDrive | NAVSIM |  [JSONL]()   |
+| DriveLM | Nuscenes | - |
+| Nuinstruct | Nuscenes | - |
+| NuscenesQA | Nuscenes | - |
+| Omnidrive | Nuscenes | - |
+| Senna | Nuscenes |  [JSONL]()   |
+| LingoQA | LingoQA | - |
+| Drama | Drama  | - |
+| MapLM | MapLM  | - |
+| Talk2Car | Nuscenes  | - |
+| Drivegpt4 | Bdd-100k  | - |
+| CODA-LM | CODA-LM  | - |
+| SUTD | SUTD  | - |
 
 ## Contact
 If you have any questions, please contact [Yongkang Li](https://owl-10.github.io/yongkangli/) via email (liyk@hust.edu.cn) or wechat (liyk_0803).
