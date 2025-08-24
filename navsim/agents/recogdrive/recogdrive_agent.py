@@ -40,6 +40,7 @@ class ReCogDriveAgent(AbstractAgent):
         grpo: bool = False,
         metric_cache_path: Optional[str] = '', 
         reference_policy_checkpoint: Optional[str] = '', 
+        vlm_size: Optional[str] = 'large', 
     ):
         super().__init__()
         self._trajectory_sampling = trajectory_sampling
@@ -54,6 +55,7 @@ class ReCogDriveAgent(AbstractAgent):
         self.backbone = None
         self.metric_cache_path = metric_cache_path
         self.reference_policy_checkpoint = reference_policy_checkpoint
+        self.vlm_size = vlm_size
 
         if not self.cache_hidden_state and not self.cache_mode:
             print("Agent running in 'no-cache' mode. Initializing internal backbone.")
@@ -67,15 +69,17 @@ class ReCogDriveAgent(AbstractAgent):
                 device=device
             )
 
-        if self.grpo:
-            cfg.grpo_cfg.metric_cache_path = self.metric_cache_path
-            cfg.grpo_cfg.reference_policy_checkpoint = self.reference_policy_checkpoint
-
         if self.dit_type == "large":
             cfg = make_recogdrive_config(self.dit_type, action_dim=3, action_horizon=8, grpo=self.grpo, input_embedding_dim=1536,sampling_method=sampling_method)
         elif self.dit_type == "small":
             cfg = make_recogdrive_config(self.dit_type, action_dim=3, action_horizon=8, grpo=self.grpo, input_embedding_dim=384,sampling_method=sampling_method)
 
+        cfg.vlm_size = self.vlm_size
+
+        if self.grpo:
+            cfg.grpo_cfg.metric_cache_path = self.metric_cache_path
+            cfg.grpo_cfg.reference_policy_checkpoint = self.reference_policy_checkpoint
+            
         self.action_head = ReCogDriveDiffusionPlanner(cfg).cuda()
         self.num_inference_samples = 1
         self.inference_selection_mode = "median"

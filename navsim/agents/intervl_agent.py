@@ -168,26 +168,22 @@ class InternVLAgent(AbstractAgent):
 
         image_paths = []
         image_prompt_lines = []
-        pixel_values = []  # List to store pixel values
-        image_prompt = ""
+        image_prompt_desc = ""
 
         if self.cam_type == 'single':
             image_paths.append(str(cameras[-1].cam_f0.image))
             image_prompt_lines.append("<FRONT VIEW>:\n<image>\n")
-            image_prompt = "1. Visual perception from front camera view\n"
+            image_prompt_desc = "1. Visual perception from front camera view\n"
         elif self.cam_type == 'multi_view':
             image_paths.extend([str(cameras[-1].cam_f0.image), str(cameras[-1].cam_l0.image), str(cameras[-1].cam_r0.image), str(cameras[-1].cam_l2.image), str(cameras[-1].cam_r2.image), str(cameras[-1].cam_b0.image)])
-            image_prompt_lines.append("<FRONT VIEW>:\n<image>\n<FRONT LEFT VIEW>':\n<image>\n<FRONT RIGHT VIEW>':\n<image>\n<BACK LEFT VIEW>':\n<image>\n<BACK RIGHT VIEW>':\n<image>\n<BACK VIEW>:\n<image>\n")
-            image_prompt = "1. Visual perception from the six surrounding camera views\n"
+            image_prompt_lines.append("<FRONT VIEW>:\n<image>\n<FRONT LEFT VIEW>:\n<image>\n<FRONT RIGHT VIEW>:\n<image>\n<BACK LEFT VIEW>:\n<image>\n<BACK RIGHT VIEW>:\n<image>\n<BACK VIEW>:\n<image>\n")
+            #image_prompt_lines.append("<FRONT VIEW>:\n<image>\n<FRONT LEFT VIEW>':\n<image>\n<FRONT RIGHT VIEW>':\n<image>\n<BACK LEFT VIEW>':\n<image>\n<BACK RIGHT VIEW>':\n<image>\n<BACK VIEW>:\n<image>\n")
+            image_prompt_desc = "1. Visual perception from the six surrounding camera views\n"
         elif self.cam_type == 'cont':
             for i in range(4):
                 image_paths.append(str(cameras[i].cam_f0.image))
-                image_prompt_lines.append(f"<FRONT VIEW>Frame-{i+1}: <image>\n") # Frame-1, Frame-2, Frame-3, Frame-4 (从过去到现在)
-            image_prompt = "1. Visual perception from continuous front camera views of the last 4 timesteps\n"
-        else:
-            image_paths.append(str(cameras[-1].cam_f0.image))
-            pixel_values.append(load_image(str(cameras[-1].cam_f0.image)))
-            image_prompt = "1. Visual perception from front camera view\n"
+                image_prompt_lines.append(f"<FRONT VIEW>Frame-{i+1}: <image>\n")
+            image_prompt_desc = "1. Visual perception from continuous front camera views of the last 4 timesteps\n"
 
         pixel_values = [load_image(image_path) for image_path in image_paths]
 
@@ -198,47 +194,39 @@ class InternVLAgent(AbstractAgent):
                 temperature=0.0
         )
 
-        image_prompt_lines_str = "".join(image_prompt_lines)
+        image_prompt_str = "".join(image_prompt_lines)
 
-        common_prompt = f"""As an autonomous driving system, predict the vehicle's trajectory based on:\n{image_prompt}2. Historical motion context (last 4 timesteps):{" ".join([f'-t-{3-i}: ({t["x"]}, {t["y"]}, {t["heading"]})' for i, t in enumerate(history_trajectory)])}\n3. Active navigation command: [{command_str.upper()}]"""
+        common_prompt = f"""As an autonomous driving system, predict the vehicle's trajectory based on:\n{image_prompt_desc}2. Historical motion context (last 4 timesteps):{" ".join([f'   - t-{3-i}: ({t["x"]}, {t["y"]}, {t["heading"]})' for i, t in enumerate(history_trajectory)])}\n3. Active navigation command: [{command_str.upper()}]"""
 
-        output_requirements = """\nOutput requirements:\n- Predict 8 future trajectory points\n- Each point format: (x:float, y:float, heading:float)\n- Use [PT, ...] to encapsulate the trajectory\n- Maintain numerical precision to 2 decimal places"""
+        output_requirements = ("\nOutput requirements:\n- Predict 8 future trajectory points\n"
+                               "- Each point format: (x:float, y:float, heading:float)\n"
+                               "- Use [PT, ...] to encapsulate the trajectory\n"
+                               "- Maintain numerical precision to 2 decimal places")
 
-
-        if self.prompt_type == 'base':
-            question = f"{image_prompt_lines_str}\n{common_prompt}{output_requirements}"
-        elif self.prompt_type == 'vel_and_acc':
+        if self.prompt_type == 'vel_and_acc':
             current_ego_status = ego_statuses[-1]
-            current_velocity = current_ego_status.ego_velocity
-            current_acceleration = current_ego_status.ego_acceleration
-            velocity_acceleration_info = f"\n4. Current velocity: ({format_number(current_velocity[0])}, {format_number(current_velocity[1])})\n5. Current acceleration: ({format_number(current_acceleration[0])}, {format_number(current_acceleration[1])})"
-            question = f"{image_prompt_lines_str}\n{common_prompt}{velocity_acceleration_info}{output_requirements}"
-        else:  # Default to 'base' if prompt_type is not recognized
+            vel_acc_info = (f"\n4. Current velocity: ({format_number(current_ego_status.ego_velocity[0])}, {format_number(current_ego_status.ego_velocity[1])})"
+                            f"\n5. Current acceleration: ({format_number(current_ego_status.ego_acceleration[0])}, {format_number(current_ego_status.ego_acceleration[1])})")
+            question = f"{image_prompt_str}\n{common_prompt}{vel_acc_info}{output_requirements}"
+        else: 
             question = f"{''.join([f'<image>' for i in range(len(image_paths))])}\n{common_prompt}{output_requirements}"
 
         prompts = [(question, pixel_values)]
-
-
+        
         responses = self.pipe(prompts, gen_config=generation_config)
+
         answers = [response.text for response in responses]
-        for answer in answers:
-            full_match = re.search(r'\[PT(?:, )?((?:\([-+]?\d*\.\d+, [-+]?\d*\.\d+, [-+]?\d*\.\d+\)(?:, )?){8})\]', answer)
-            if full_match:
-                coordinates_matches = re.findall(r'\([-+]?\d*\.\d+, [-+]?\d*\.\d+, [-+]?\d*\.\d+\)', full_match.group(1))
-                if len(coordinates_matches) == 8:
-                    coordinates = [tuple(map(float, re.findall(r'-?\d+\.\d+', coord))) for coord in coordinates_matches]
-                    if all(len(coord_tuple) == 3 for coord_tuple in coordinates): 
-                        coordinates_array = np.array(coordinates)
-                        return {"trajectory": coordinates_array.reshape(-1, self._trajectory_sampling.num_poses, 3)}
-                    else:
-                        print("error: Parsed coordinate tuple does not have length 3:", coordinates)
-                        return {"trajectory": np.zeros((1, self._trajectory_sampling.num_poses, 3))}
-                else:
-                    print("error: Did not find 8 coordinate tuples:", coordinates_matches)
-                    return {"trajectory": np.zeros((1, self._trajectory_sampling.num_poses, 3))}
-            else:
-                print("error parsing trajectory:", answer)
-                return {"trajectory": np.zeros((1, self._trajectory_sampling.num_poses, 3))}
+
+        full_match = re.search(r'\[PT(?:, )?((?:\([-+]?\d*\.\d+, [-+]?\d*\.\d+, [-+]?\d*\.\d+\)(?:, )?){8})\]', answers[0])
+        if full_match:
+            coords_matches = re.findall(r'\(([-+]?\d*\.\d+), ([-+]?\d*\.\d+), ([-+]?\d*\.\d+)\)', full_match.group(1))
+            if len(coords_matches) == 8:
+                coordinates = [tuple(map(float, coord)) for coord in coords_matches]
+                coordinates_array = np.array(coordinates, dtype=np.float32)
+                return {"trajectory": coordinates_array.reshape(1, self._trajectory_sampling.num_poses, 3)}
+
+        print("Error parsing trajectory, returning zeros:", answer)
+        return {"trajectory": np.zeros((1, self._trajectory_sampling.num_poses, 3), dtype=np.float32)}
 
 
     def compute_trajectory(self, agent_input: AgentInput) -> Trajectory:
