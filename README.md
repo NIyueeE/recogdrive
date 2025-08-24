@@ -70,9 +70,10 @@ Although end-to-end autonomous driving has made remarkable progress, its perform
 
 | Method | Model Size | Training Stage | PDMS | Weight Download |
 | :---: | :---: | :---: | :---: |  :---: |
-| ReCogDrive(VLM) | 8B | Stage 1 | 86.2 | [Model](https://huggingface.co/owl10/ReCogDrive/tree/main/ReCogDrive_VLM) | |
-| ReCogDrive | 8B + 35M | Stage 1&2&3| 90.2 | [Model](https://huggingface.co/owl10/ReCogDrive/tree/main/Diffusion_Planner) | |
-
+| ReCogDrive(VLM)-Base | 2B | Stage 1 | 84.8 | [Model](https://huggingface.co/owl10/ReCogDrive/tree/main/ReCogDrive_VLM_2B) | |
+| ReCogDrive-Base | 2B + 35M | Stage 1&2&3| 90.3 | [Model](https://huggingface.co/owl10/ReCogDrive/tree/main/Diffusion_Planner_2B) | |
+| ReCogDrive(VLM)-Large | 8B | Stage 1 | 86.8 | [Model](https://huggingface.co/owl10/ReCogDrive/tree/main/ReCogDrive_VLM_8B) | |
+| ReCogDrive-Large | 8B + 35M | Stage 1&2&3| 90.5 | [Model](https://huggingface.co/owl10/ReCogDrive/tree/main/Diffusion_Planner_8B) | |
 
 ## Contact
 If you have any questions, please contact [Yongkang Li](https://owl-10.github.io/yongkangli/) via email (liyk@hust.edu.cn) or wechat (liyk_0803).
