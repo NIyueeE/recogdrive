@@ -146,7 +146,7 @@ class ReCogDriveAgent(AbstractAgent):
                 history_trajectory_sample = history_trajectory[i]
                 command_str_sample = command_str_list[i]
 
-                history_str = chr(2).join([
+                history_str = ' '.join([
                     f'   - t-{3-j}: ({format_number(history_trajectory_sample[j, 0].item())}, '
                     f'{format_number(history_trajectory_sample[j, 1].item())}, '
                     f'{format_number(history_trajectory_sample[j, 2].item())})'
@@ -168,7 +168,7 @@ class ReCogDriveAgent(AbstractAgent):
                 questions.append(f"{prompt}{output_requirements}")
 
             outputs = self.backbone(pixel_values_cat, questions, num_patches_list=num_patches_list)
-            last_hidden_state = outputs.hidden_states[-1][:,:20]
+            last_hidden_state = outputs.hidden_states[-1]
 
         status_feature = features["status_feature"].cuda()
 
