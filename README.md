@@ -14,7 +14,7 @@ Hangjun Ye<sup>2</sup>, [Wenyu Liu](https://eic.hust.edu.cn/professor/liuwenyu/)
 
 Arxiv 2025
 
-<a href="https://arxiv.org/abs/2506.08052"><img src='https://img.shields.io/badge/arXiv-ReCogDrive-red' alt='Paper PDF'></a>   <a href="https://xiaomi-research.github.io/recogdrive/"><img src='https://img.shields.io/badge/Project_Page-ReCogDrive-green' alt='Project Page'></a> [![huggingface weights](https://img.shields.io/badge/%F0%9F%A4%97%20Weights-Recogdrive-yellow)](https://huggingface.co/owl10/ReCogDrive/tree/main)&nbsp; [![huggingface datasets](https://img.shields.io/badge/%F0%9F%A4%97%20Weights-Recogdrive-red)](https://huggingface.co/datasets/owl10/ReCogDrive_Pretraining)&nbsp;
+<a href="https://arxiv.org/abs/2506.08052"><img src='https://img.shields.io/badge/arXiv-ReCogDrive-red' alt='Paper PDF'></a>   <a href="https://xiaomi-research.github.io/recogdrive/"><img src='https://img.shields.io/badge/Project_Page-ReCogDrive-green' alt='Project Page'></a> [![huggingface weights](https://img.shields.io/badge/%F0%9F%A4%97%20Weights-Recogdrive-yellow)](https://huggingface.co/owl10/ReCogDrive/tree/main)&nbsp; [![huggingface datasets](https://img.shields.io/badge/%F0%9F%A4%97%20Datasets-Recogdrive-red)](https://huggingface.co/datasets/owl10/ReCogDrive_Pretraining)&nbsp;
 </div>
 
 
