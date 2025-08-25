@@ -32,7 +32,7 @@ You can download our pretrained **ReCogDrive VLM** from [ReCogDrive VLM](https:/
 
 For the diffusion planner training, the first step is to **cache datasets for faster training**.  
 Since DiT training converges relatively slowly, training VLM and DiT jointly can be very time-consuming. To accelerate, we cache the hidden states output by the VLM, which enables much faster training.  
-> ⚠️ Note: Caching requires approximately **3–4 TB of disk space**. We are also working on faster training methods.  
+> ⚠️ Note: Caching requires approximately **1–2 TB of disk space**. We are also working on faster training methods.  
 
 We also provide the option to skip caching hidden states and directly train VLM + DiT together, though this will be slower.
 
