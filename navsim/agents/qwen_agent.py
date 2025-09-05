@@ -190,7 +190,7 @@ class QwenVLAgent(AbstractAgent):
 
         image_prompt_lines_str = "".join(image_prompt_lines) 
 
-        common_prompt = f"""As an autonomous driving system, predict the vehicle's trajectory based on:\n{image_prompt}2. Historical motion context (last 4 timesteps):{chr(2).join([f'   - t-{3-i}: ({t["x"]}, {t["y"]}, {t["heading"]})' for i, t in enumerate(history_trajectory)])}\n3. Active navigation command: [{command_str.upper()}]"""  # Common prompt up to the velocity/acceleration
+        common_prompt = f"""As an autonomous driving system, predict the vehicle's trajectory based on:\n{image_prompt}2. Historical motion context (last 4 timesteps):{" ".join([f'   - t-{3-i}: ({t["x"]}, {t["y"]}, {t["heading"]})' for i, t in enumerate(history_trajectory)])}\n3. Active navigation command: [{command_str.upper()}]"""  # Common prompt up to the velocity/acceleration
 
         output_requirements = """\nOutput requirements:\n- Predict 8 future trajectory points\n- Each point format: (x:float, y:float, heading:float)\n- Use [PT, ...] to encapsulate the trajectory\n- Maintain numerical precision to 2 decimal places"""
 
