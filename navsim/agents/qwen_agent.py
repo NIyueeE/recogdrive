@@ -1,4 +1,5 @@
 import re
+import os
 from enum import IntEnum
 from typing import Any, Dict, List, Optional, Union
 
@@ -117,8 +118,10 @@ class QwenVLAgent(AbstractAgent):
         self._checkpoint_path = checkpoint_path
         self.prompt_type = prompt_type
         self.cam_type = cam_type
+        local_rank = int(os.getenv("LOCAL_RANK", "0"))
+        device = f"cuda:{local_rank}"
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            self._checkpoint_path, torch_dtype="bfloat16", device_map="auto",attn_implementation="flash_attention_2"
+            self._checkpoint_path, torch_dtype="bfloat16", device_map=device,attn_implementation="flash_attention_2"
         )
         self.processor = AutoProcessor.from_pretrained(self._checkpoint_path)
         
@@ -218,7 +221,8 @@ class QwenVLAgent(AbstractAgent):
         image_inputs, video_inputs = process_vision_info(messages) 
         inputs = self.processor(text=[text], images=image_inputs, videos=video_inputs, padding=True, return_tensors="pt").to("cuda")
         generation_config = {
-                'max_new_tokens': 512,           
+                'max_new_tokens': 512,
+                "do_sample": True           
             }
         generated_ids = self.model.generate(**inputs, **generation_config)
         generated_ids_trimmed = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
