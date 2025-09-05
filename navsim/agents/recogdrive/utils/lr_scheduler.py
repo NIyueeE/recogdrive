@@ -4,13 +4,13 @@ import math
 
 class WarmupCosLR(_LRScheduler):
     def __init__(
-        self, optimizer, min_lr, lr, warmup_epochs, epochs, last_epoch=-1, verbose=False
+        self, optimizer, min_lr, lr, warmup_epochs, epochs, last_epoch=-1
     ) -> None:
         self.min_lr = min_lr
         self.lr = lr
         self.epochs = epochs
         self.warmup_epochs = warmup_epochs
-        super(WarmupCosLR, self).__init__(optimizer, last_epoch, verbose)
+        super(WarmupCosLR, self).__init__(optimizer, last_epoch)
 
     def state_dict(self):
         return {key: value for key, value in self.__dict__.items() if key != "optimizer"}
