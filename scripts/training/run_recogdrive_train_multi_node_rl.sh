@@ -30,7 +30,6 @@ torchrun \
     $NAVSIM_DEVKIT_ROOT/navsim/planning/script/run_training_recogdrive_rl.py \
     agent=recogdrive_agent \
     agent.lr=1e-4 \
-    agent.grpo=False \
     agent.vlm_path='/path/to/pretrain_model' \
     agent.cam_type='single' \
     agent.grpo=True \

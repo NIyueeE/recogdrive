@@ -79,8 +79,8 @@ class GRPOConfig:
     final_action_clip_value: float = 1.0
     eps_clip_value: Optional[float] = None
     eval_min_sampling_denoising_std: float = 0.0001
-    min_sampling_denoising_std: float = 0.02
-    min_logprob_denoising_std: float = 0.10
+    min_sampling_denoising_std: float = 0.04
+    min_logprob_denoising_std: float = 0.1
     clip_advantage_lower_quantile: float = 0.0
     clip_advantage_upper_quantile: float = 1.0
     gamma_denoising: float = 0.6
@@ -88,7 +88,7 @@ class GRPOConfig:
     metric_cache_path: str = "/path/to/metric_cache_train"
     reference_policy_checkpoint: str = "/path/to/IL_Model.ckpt"
     scorer_config: PDMScorerConfig = field(default_factory=lambda: PDMScorerConfig(
-        progress_weight=30.0, ttc_weight=5.0, comfortable_weight=2.0
+        progress_weight=10.0, ttc_weight=5.0, comfortable_weight=2.0
     ))
 
 
@@ -823,7 +823,7 @@ class ReCogDriveDiffusionPlanner(nn.Module):
         tokens_list,
         sample_time: int = 8,
         deterministic=False,
-        bc_coeff: float = 1e-2,
+        bc_coeff: float = 0.1,
         use_bc_loss: bool = True
     ) -> BatchFeature:
         """Computes the Diffusion-GRPO loss."""

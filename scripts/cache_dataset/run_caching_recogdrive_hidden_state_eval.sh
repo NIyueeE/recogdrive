@@ -34,5 +34,5 @@ torchrun \
     agent.cache_hidden_state=True \
     agent.cache_mode=True \
     train_test_split=$TRAIN_TEST_SPLIT \
-    agent.vlm_path="/path/to/internvl3_8b_finetune_full_baseline_com_his_mix_training_final_no_llava_all_llava_clean_pipelinev5_internvl3" \ 
+    agent.vlm_path="/path/to/ReCogDrive_8b \ 
     cache_path=$CACHE_PATH  > caching_dataset_test.txt 2>&1

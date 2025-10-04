@@ -33,7 +33,6 @@ torchrun \
     agent.grpo=False \
     agent.vlm_path='/path/to/pretrain_model' \
     agent.cam_type='single' \
-    agent.grpo=False \
     agent.cache_hidden_state=True \
     agent.vlm_type="internvl" \
     agent.dit_type="small" \

@@ -72,7 +72,7 @@ def plot_bev_frame(scene: Scene, frame_idx: int) -> Tuple[plt.Figure, plt.Axes]:
     return fig, ax
 
 
-def plot_bev_with_agent(scene: Scene, agent: AbstractAgent) -> Tuple[plt.Figure, plt.Axes]:
+def plot_bev_with_agent(scene: Scene, scene_traj: Scene,agent: AbstractAgent) -> Tuple[plt.Figure, plt.Axes]:
     """
     Plots agent and human trajectory in birds-eye-view visualization
     :param scene: navsim scene dataclass
@@ -81,7 +81,7 @@ def plot_bev_with_agent(scene: Scene, agent: AbstractAgent) -> Tuple[plt.Figure,
     """
 
     human_trajectory = scene.get_future_trajectory()
-    agent_trajectory = agent.compute_trajectory(scene.get_agent_input())
+    agent_trajectory = agent.compute_trajectory_vis(scene_traj.get_agent_input())
 
     frame_idx = scene.scene_metadata.num_history_frames - 1
     fig, ax = plt.subplots(1, 1, figsize=BEV_PLOT_CONFIG["figure_size"])
@@ -184,12 +184,12 @@ def plot_bev_and_camera_with_agent(
     gs = fig.add_gridspec(1, 2, width_ratios=[1, 1], wspace=0.05) # 左右比例 1:1, 调整列间距
 
     # 左侧 BEV 布局
-    bev_ax = fig.add_subplot(gs[0])
+    bev_ax = fig.add_subplot(gs[1])
 
     # 添加 BEV 和轨迹 (人类和智能体)
     add_configured_bev_on_ax(bev_ax, scene.map_api, frame)
     human_trajectory = scene.get_future_trajectory()
-    agent_trajectory = agent.compute_trajectory(scene_traj.get_agent_input())
+    agent_trajectory = agent.compute_trajectory_vis(scene_traj.get_agent_input())
 
     add_trajectory_to_bev_ax(bev_ax, human_trajectory, TRAJECTORY_CONFIG["human"])
     add_trajectory_to_bev_ax(bev_ax, agent_trajectory, TRAJECTORY_CONFIG["agent"])
@@ -200,7 +200,7 @@ def plot_bev_and_camera_with_agent(
     bev_ax.set_yticks([])
 
     # 右侧前视摄像头布局
-    camera_ax = fig.add_subplot(gs[1])
+    camera_ax = fig.add_subplot(gs[0])
 
     # 只添加 f0 摄像头
     add_camera_ax(camera_ax, frame.cameras.cam_f0)
@@ -223,6 +223,21 @@ def plot_bev_and_camera_with_agent(
 
     add_trajectory_to_camera_ax(camera_ax, frame.cameras.cam_f0, agent_trajectory, camera_trajectory_config)
 
+    human_trajectory = scene.get_future_trajectory()
+
+    trajectory_config_human = {  # 你可以根据需要调整这些参数
+        "line_color": "green", # 设置线条颜色为红色
+        "line_color_alpha": 0.7,
+        "line_width": 4,
+        "line_style": "-", # 设置线条样式为实线
+        "marker": None,     # 不显示 marker
+        "zorder": 3,
+        "arrow_color": "green", # 设置箭头颜色为红色，与线条颜色一致
+        "arrow_edge_color": "green",
+        "arrow_alpha": 1.0,
+        "arrow_line_width": 1.5,
+    }
+    add_trajectory_to_camera_ax(camera_ax, frame.cameras.cam_f0, human_trajectory, trajectory_config_human)
     # 配置 f0 摄像头坐标轴
     camera_ax.axis("off") # 关闭坐标轴
     camera_ax.set_xticks([]) # 移除刻度
@@ -265,7 +280,7 @@ def plot_traj_with_agent(
     ax_f0.set_aspect("auto")
 
     # 获取 agent 轨迹
-    agent_trajectory= agent.compute_trajectory(scene_traj.get_agent_input())
+    agent_trajectory= agent.compute_trajectory_vis(scene_traj.get_agent_input())
     # 在 f0 图上可视化 agent_trajectory
     trajectory_config = {  # 你可以根据需要调整这些参数
         "line_color": "red", # 设置线条颜色为红色
@@ -288,21 +303,21 @@ def plot_traj_with_agent(
                 simulator=simulator,
                 scorer=scorer
     )
-    #human_trajectory = scene.get_future_trajectory()
+    human_trajectory = scene.get_future_trajectory()
 
-    # trajectory_config_human = {  # 你可以根据需要调整这些参数
-    #     "line_color": "green", # 设置线条颜色为红色
-    #     "line_color_alpha": 0.7,
-    #     "line_width": 4,
-    #     "line_style": "-", # 设置线条样式为实线
-    #     "marker": None,     # 不显示 marker
-    #     "zorder": 3,
-    #     "arrow_color": "green", # 设置箭头颜色为红色，与线条颜色一致
-    #     "arrow_edge_color": "green",
-    #     "arrow_alpha": 1.0,
-    #     "arrow_line_width": 1.5,
-    # }
-    # add_trajectory_to_camera_ax(ax_f0, frame.cameras.cam_f0, human_trajectory, trajectory_config_human)
+    trajectory_config_human = {  # 你可以根据需要调整这些参数
+        "line_color": "green", # 设置线条颜色为红色
+        "line_color_alpha": 0.7,
+        "line_width": 4,
+        "line_style": "-", # 设置线条样式为实线
+        "marker": None,     # 不显示 marker
+        "zorder": 3,
+        "arrow_color": "green", # 设置箭头颜色为红色，与线条颜色一致
+        "arrow_edge_color": "green",
+        "arrow_alpha": 1.0,
+        "arrow_line_width": 1.5,
+    }
+    add_trajectory_to_camera_ax(ax_f0, frame.cameras.cam_f0, human_trajectory, trajectory_config_human)
 
     fig.tight_layout()
     fig.subplots_adjust(

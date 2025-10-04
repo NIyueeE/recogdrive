@@ -122,18 +122,23 @@ class ReCogDriveAgent(AbstractAgent):
         history_trajectory = features["history_trajectory"].cuda()
         high_command_one_hot = features["high_command_one_hot"].cuda()
         
+        
+        if history_trajectory.ndim == 2: history_trajectory = history_trajectory.unsqueeze(0)
+        if high_command_one_hot.ndim == 1: high_command_one_hot = high_command_one_hot.unsqueeze(0)
+
         if self.cache_hidden_state:
             last_hidden_state = features["last_hidden_state"].cuda()
         else:
             if self.backbone is None:
                 raise RuntimeError("Agent is in 'no-cache' mode, but backbone is not initialized.")
-
-            image_paths = self._decode_paths_from_tensor(features["image_path_tensor"])
+            image_path_tensor = features["image_path_tensor"]
+            if image_path_tensor.ndim == 1: image_path_tensor = image_path_tensor.unsqueeze(0)
+            image_paths = self._decode_paths_from_tensor(image_path_tensor)
             
             pixel_values_list = [load_image(path) for path in image_paths]
             
             num_patches_list = [p.shape[0] for p in pixel_values_list]
-            pixel_values_cat = torch.cat(pixel_values_list, dim=0)
+            pixel_values_cat = torch.cat(pixel_values_list, dim=0).cuda()
             
 
             navigation_commands = ['turn left', 'go straight', 'turn right']
@@ -171,11 +176,8 @@ class ReCogDriveAgent(AbstractAgent):
             last_hidden_state = outputs.hidden_states[-1]
 
         status_feature = features["status_feature"].cuda()
-
-        if history_trajectory.ndim == 2: history_trajectory = history_trajectory.unsqueeze(0)
-        if last_hidden_state.ndim == 2: last_hidden_state = last_hidden_state.unsqueeze(0)
-        if high_command_one_hot.ndim == 1: high_command_one_hot = high_command_one_hot.unsqueeze(0)
         if status_feature.ndim == 1: status_feature = status_feature.unsqueeze(0)
+        if last_hidden_state.ndim == 2: last_hidden_state = last_hidden_state.unsqueeze(0)
 
         history_trajectory_reshaped = history_trajectory.view(history_trajectory.size(0), -1)
         input_state = torch.cat([status_feature, history_trajectory_reshaped], dim=1)
@@ -196,6 +198,23 @@ class ReCogDriveAgent(AbstractAgent):
             predictions = self.forward(features)
             poses = predictions["pred_traj"].float().cpu().squeeze(0)
         return Trajectory(poses)
+
+    def compute_trajectory_vis(self, agent_input: AgentInput) -> Trajectory:
+        self.eval()
+
+        features: Dict[str, torch.Tensor] = {}
+        # build features
+        for builder in self.get_feature_builders():
+            features.update(builder.compute_features(agent_input))
+
+        # add batch dimension
+        features = {k: v.unsqueeze(0) for k, v in features.items()}
+
+        with torch.no_grad():
+            predictions = self.forward(features)
+            poses = predictions["pred_traj"].float().cpu().squeeze(0)
+        return Trajectory(poses)
+
 
     def compute_loss(self, features: Dict[str, torch.Tensor], targets: Dict[str, torch.Tensor], predictions: Dict[str, torch.Tensor]) -> torch.Tensor:
         if self.training and self.grpo:

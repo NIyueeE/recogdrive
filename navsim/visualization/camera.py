@@ -665,7 +665,7 @@ def add_trajectory_to_camera_ax(ax: plt.Axes, camera: Camera, trajectory: Trajec
             zorder=config["zorder"],  # 确保轨迹线在图像之上
         )
 
-        # 添加箭头，指向轨迹的最后一个线段，以最后一点为起点 (使用 points_to_plot)
+        # # 添加箭头，指向轨迹的最后一个线段，以最后一点为起点 (使用 points_to_plot)
         last_point = plot_points[-1]
         second_last_point = plot_points[-2]
 
@@ -692,6 +692,66 @@ def add_trajectory_to_camera_ax(ax: plt.Axes, camera: Camera, trajectory: Trajec
 
     return ax
 
+
+# from scipy.interpolate import splprep, splev
+
+# def add_trajectory_to_camera_ax(ax: plt.Axes, camera: Camera, trajectory: Trajectory, config: Dict[str, Any]) -> plt.Axes:
+#     poses_2d = trajectory.poses[:, :2]
+#     poses_3d = np.concatenate([poses_2d, np.zeros((poses_2d.shape[0], 1))], axis=1)
+#     poses = np.concatenate([np.array([[0, 0, 0]]), poses_3d])
+
+#     pc_in_cam, pc_in_fov_mask = _transform_pcs_to_images(
+#         poses.T,
+#         camera.sensor2lidar_rotation,
+#         camera.sensor2lidar_translation,
+#         camera.intrinsics,
+#         img_shape=camera.image.shape[:2]
+#     )
+
+#     image_height, image_width = camera.image.shape[:2]
+
+#     # === 起点处理：保证轨迹从视野内或边界进入 ===
+#     points_to_plot = []
+#     first_point = pc_in_cam[1] if len(pc_in_cam) > 1 else None
+#     second_point = pc_in_cam[2] if len(pc_in_cam) > 2 else None
+
+#     if first_point is not None and pc_in_fov_mask[1]:
+#         points_to_plot.append(first_point)
+#     elif first_point is not None and second_point is not None:
+#         intersection_point = _get_intersection_with_image_bottom_boundary(
+#             first_point, second_point, image_width, image_height
+#         )
+#         if intersection_point is not None:
+#             points_to_plot.append(intersection_point)
+
+#     for i in range(2, len(pc_in_cam)):
+#         if pc_in_fov_mask[i]:
+#             points_to_plot.append(pc_in_cam[i])
+
+#     valid_points = np.array(points_to_plot)
+
+#     if len(valid_points) < 2:
+#         return ax
+
+#     # === spline 平滑轨迹 ===
+#     x, y = valid_points[:, 0], valid_points[:, 1]
+#     try:
+#         tck, u = splprep([x, y], s=2)  # s 控制平滑程度
+#         u_fine = np.linspace(0, 1, 200)
+#         x_smooth, y_smooth = splev(u_fine, tck)
+#     except Exception:
+#         # 如果点数不足以 spline，就直接连线
+#         x_smooth, y_smooth = x, y
+
+#     # === 干净的线条（无 glow，无箭头） ===
+#     ax.plot(x_smooth, y_smooth,
+#             color=config["line_color"],
+#             alpha=config["line_color_alpha"],
+#             linewidth=config["line_width"],
+#             linestyle=config["line_style"],
+#             zorder=config["zorder"])
+
+#     return ax
 
 
 

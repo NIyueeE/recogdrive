@@ -36,10 +36,13 @@ torchrun \
     agent.cache_hidden_state=True \
     agent.vlm_type="internvl" \
     agent.dit_type="small" \
+    agent.vlm_size="small" \
     agent.sampling_method="ddim" \
     trainer.params.max_epochs=200 \
+    trainer.params.num_nodes=4 \
+    trainer.params.devices=8 \
     experiment_name=training_internvl_agent_dit \
     train_test_split=$TRAIN_TEST_SPLIT \
-    cache_path="/path/to/recogdrive_agent_cache_dir_train" \
+    cache_path="/path/to/recogdrive_agent_cache_dir_train_2b" \
     use_cache_without_dataset=True \
-    force_cache_computation=False > train_recogdrive_exp.txt 2>&1
+    force_cache_computation=False > train_recogdrive_exp_2b.txt 2>&1

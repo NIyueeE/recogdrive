@@ -27,7 +27,7 @@ torchrun \
     --master_addr=$MLP_WORKER_0_HOST \
     --nproc_per_node=${GPUS} \
     --master_port=$MLP_WORKER_0_PORT \
-    $NAVSIM_DEVKIT_ROOT/navsim/planning/script/run_training_recogdrive.py \
+    $NAVSIM_DEVKIT_ROOT/navsim/planning/script/run_training_recogdrive_ema.py \
     agent=recogdrive_agent \
     agent.lr=1e-4 \
     agent.grpo=False \
@@ -36,10 +36,13 @@ torchrun \
     agent.cache_hidden_state=True \
     agent.vlm_type="internvl" \
     agent.dit_type="small" \
+    agent.vlm_size="small" \
     agent.sampling_method="ddim" \
-    trainer.params.max_epochs=200 \
-    experiment_name=training_internvl_agent_dit \
+    trainer.params.max_epochs=100 \
+    trainer.params.num_nodes=4 \
+    trainer.params.devices=8 \
+    experiment_name=training_recogdrive_agent \
     train_test_split=$TRAIN_TEST_SPLIT \
     cache_path="/path/to/recogdrive_agent_cache_dir_train" \
     use_cache_without_dataset=True \
-    force_cache_computation=False > train_recogdrive_exp.txt 2>&1
+    force_cache_computation=False > train_recogdrive_exp_ema_2b.txt &
