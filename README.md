@@ -50,15 +50,6 @@ Recent studies have explored leveraging the world knowledge and cognitive capabi
 </div>
 
 
-## Qualitative Results on NAVSIM Navtest 
-<div align="center">
-  <img src="assets/images/vis.png" width="1000">
-</div>
-<p align="left">
-  We compare ReCogDrive (IL and RL) with Transfuser, where RL yields safer and more reliable trajectories in challenging turning scenarios. More visualizations are in the supplementary material.
-</p>
-
-
 
 ## Getting Started
 
