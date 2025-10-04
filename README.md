@@ -174,6 +174,17 @@ We open-sourced these high-quality driving QA datasets in the hope of supporting
 In addition, we provide training data on Bench2Drive, where we further fine-tune our models on mixed data and Navsim real-world scenarios, followed by training on Bench2Drive-Traj and Bench2Drive-QA to better adapt to the CARLA driving environment.
 
 
+
+## Qualitative Results on NAVSIM Navtest 
+<div align="center">
+  <img src="assets/images/vis.png" width="1000">
+</div>
+<p align="left">
+  We compare ReCogDrive (IL and RL) with Transfuser, where RL yields safer and more reliable trajectories in challenging turning scenarios. More visualizations are in the supplementary material.
+</p>
+
+
+
 ## Qualitative Results on Bench2drive
 <div align="center">
   <img src="assets/images/b2d.png" width="1000">
