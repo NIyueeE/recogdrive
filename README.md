@@ -28,10 +28,10 @@ Arxiv 2025
 
 
 ## Updates
-- [x] Release Paper  
-- [x] Release Full Models and Training/Evaluation Framework   
-- [x] Release Full Driving QA Datasets
-- [x] Release updated paper 
+- [√] Release Paper  
+- [√] Release Full Models and Training/Evaluation Framework   
+- [√] Release Full Driving QA Datasets
+- [√] Release updated paper 
 
 ## Table of Contents
 - [Abstract](#Abstract)
