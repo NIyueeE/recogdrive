@@ -45,15 +45,14 @@ torchrun \
     train_test_split=$TRAIN_TEST_SPLIT \
     agent=recogdrive_agent \
     agent.checkpoint_path="'$CHECKPOINT'" \
-    agent.vlm_path='/path/to/ReCogDrive-VLM-2B' \
+    agent.vlm_path='/path/to/owl10/ReCogDrive-VLM-8B' \
     agent.cam_type='single' \
     agent.grpo=False \
-    agent.cache_hidden_state=True \
+    agent.cache_hidden_state=False \
     agent.vlm_type="internvl" \
     agent.dit_type="small" \
-    agent.vlm_size="small" \
-    cache_path="/path/to/exp/recogdrive_agent_cache_dir_train_test_2b" \
+    cache_path="/path/to/exp/recogdrive_agent_cache_dir_train_test_8b" \
     use_cache_without_dataset=True \
     agent.sampling_method="ddim" \
-    experiment_name=recogdrive_agent_eval > eval_2b.txt 2>&1
+    experiment_name=recogdrive_agent_eval > eval_8b.txt 2>&1
 

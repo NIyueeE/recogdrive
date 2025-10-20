@@ -26,12 +26,20 @@ export CUDA_LAUNCH_BLOCKING=1
 
 CHECKPOINT="/path/to/recogdrive.ckpt"
 
+# 1. Set NAVSIM dataset and related environment variables
+# 2. Configure torchrun (e.g., single machine: --nproc_per_node=8; adjust for multi-node)
+# 3. Set agent.vlm_path and run dataset caching
+# cache_hidden_state:
+# In IL/RL training, we save the VLM’s last_hidden_state together with historical trajectories, instructions, and ego status
+# to accelerate training by avoiding repeated VLM forward passes. You can refer to navsim\agents\recogdrive\recogdrive_features.py.
+# We are also exploring joint training of VLM and DiT, as VLM forward is the main bottleneck that slows training.
+# During evaluation, we provide two modes: with or without caching the hidden state.
+# For GPUs like 3090/4090, set cache_hidden_state=False to disable caching,
+# allowing VLM and DiT to perform joint inference during evaluation.
+
+
 torchrun \
-    --nnodes=4 \
-    --node_rank=$MLP_ROLE_INDEX \
-    --master_addr=$MLP_WORKER_0_HOST \
-    --nproc_per_node=${GPUS} \
-    --master_port=$MLP_WORKER_0_PORT \
+    --nproc_per_node=8 \
     $NAVSIM_DEVKIT_ROOT/navsim/planning/script/run_pdm_score_recogdrive.py \
     train_test_split=$TRAIN_TEST_SPLIT \
     agent=recogdrive_agent \

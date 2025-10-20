@@ -15,6 +15,7 @@ sh generate_dataset/generate_internvl_dataset_pipeline.sh     # auto-labeled dat
 Note: Before running the pipeline script, you need to deploy the corresponding VLM using vllm or Sglang for automatic generation.
 
 Next, download the **InternVL pretrained weights** from HuggingFace:  
+👉 [InternVL3-2B Weights](https://huggingface.co/OpenGVLab/InternVL3-2B)
 👉 [InternVL3-8B Weights](https://huggingface.co/OpenGVLab/InternVL3-8B)
 
 After downloading, go to `./internvl_chat/shell/internvl3.0/2nd_finetune` and configure the training script.  
@@ -44,6 +45,9 @@ sh cache_dataset/run_caching_recogdrive_hidden_state.sh
 # cache dataset for evaluation
 sh cache_dataset/run_caching_recogdrive_hidden_state_eval.sh
 
+# cache dataset for evaluation without caching hidden state
+sh cache_dataset/run_caching_recogdrive_no_hidden_state_eval.sh
+
 ```
 
 ### Step 2: Configure and run training
@@ -66,6 +70,11 @@ After training is complete, you can configure the evaluation script and launch e
 
 ```bash
 sh evaluation/run_recogdrive_agent_pdm_score_evaluation_2b.sh
+
+or
+
+sh evaluation/run_recogdrive_agent_pdm_score_evaluation_2b_no_hidden_state.sh
+
 ```
 
 This will evaluate your trained agent using **PDM scores** on the navtest.
@@ -110,7 +119,11 @@ After training is complete, you can configure the evaluation script and launch e
 
 ```bash
 sh evaluation/run_recogdrive_agent_pdm_score_evaluation_2b.sh
-```
 
+or
+
+sh evaluation/run_recogdrive_agent_pdm_score_evaluation_2b_no_hidden_state.sh
+
+```
 This will evaluate your trained agent using **PDM scores** on the navtest.
 

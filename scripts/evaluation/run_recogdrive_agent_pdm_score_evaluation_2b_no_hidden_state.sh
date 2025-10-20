@@ -26,7 +26,6 @@ export CUDA_LAUNCH_BLOCKING=1
 
 CHECKPOINT="/path/to/recogdrive.ckpt"
 
-
 # 1. Set NAVSIM dataset and related environment variables
 # 2. Configure torchrun (e.g., single machine: --nproc_per_node=8; adjust for multi-node)
 # 3. Set agent.vlm_path and run dataset caching
@@ -48,7 +47,7 @@ torchrun \
     agent.vlm_path='/path/to/ReCogDrive-VLM-2B' \
     agent.cam_type='single' \
     agent.grpo=False \
-    agent.cache_hidden_state=True \
+    agent.cache_hidden_state=False \
     agent.vlm_type="internvl" \
     agent.dit_type="small" \
     agent.vlm_size="small" \

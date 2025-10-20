@@ -22,11 +22,7 @@ export PORT=${PORT}
 echo "GPUS: ${GPUS}"
 
 torchrun \
-    --nnodes=1 \
-    --node_rank=$MLP_ROLE_INDEX \
-    --master_addr=$MLP_WORKER_0_HOST \
-    --nproc_per_node=${GPUS} \
-    --master_port=$MLP_WORKER_0_PORT \
+    --nproc_per_node=8 \
     $NAVSIM_DEVKIT_ROOT/navsim/planning/script/run_dataset_caching_multi_node.py \
     agent=recogdrive_agent \
     experiment_name=recogdrive_agent_cache \
@@ -34,5 +30,5 @@ torchrun \
     agent.cache_hidden_state=True \
     agent.cache_mode=True \
     train_test_split=$TRAIN_TEST_SPLIT \
-    agent.vlm_path="/path/to/ReCogDrive_8b" \
+    agent.vlm_path="/path/to/ReCogDrive_2b" \
     cache_path=$CACHE_PATH  > caching_dataset.txt 2>&1

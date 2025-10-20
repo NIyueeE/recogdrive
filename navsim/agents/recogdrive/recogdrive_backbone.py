@@ -55,6 +55,7 @@ class RecogDriveBackbone(nn.Module):
                 torch_dtype=torch.bfloat16,
                 low_cpu_mem_usage=True,
                 trust_remote_code=True,
+                use_flash_attn=True,
                 device_map=self.device
             ).eval()
             self.tokenizer = AutoTokenizer.from_pretrained(
