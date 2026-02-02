@@ -16,6 +16,14 @@
                 "$(pwd)"
               ],
             "env": {}
+        },
+        "Qwen-VL-Series-Finetune Docs": {
+            "command": "pnpm",
+            "args":[
+                "dlx",
+                "mcp-remote",
+                "https://gitmcp.io/2U1/Qwen-VL-Series-Finetune"
+            ]
         }
     }
 }
