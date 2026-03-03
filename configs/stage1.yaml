@@ -1,0 +1,29 @@
+# Stage 1: VLM Supervised Fine-tuning Configuration
+
+# Override default for Stage 1
+stage: "stage1"
+
+# VLM Configuration (Stage 1 specific)
+vlm:
+  vlm_type: "internvl"
+  vlm_model_path: "/path/to/InternVL3-8B"
+  vlm_size: "large"
+  freeze_llm: false
+  freeze_mlp: false
+  freeze_backbone: false
+  force_image_size: 448
+  max_dynamic_patch: 16
+
+# Training parameters for VLM fine-tuning
+learning_rate: 4.0e-5
+num_train_epochs: 3
+per_device_batch_size: 1
+gradient_accumulation_steps: 16
+
+# Data
+data:
+  meta_path: "shell/data_info/recogdrive_pretrain.json"
+  max_seq_length: 12288
+  dynamic_image_size: true
+  use_thumbnail: true
+  dataloader_num_workers: 32

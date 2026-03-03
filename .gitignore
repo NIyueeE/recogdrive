@@ -16,5 +16,5 @@
 *.jpg
 *.pcd
 
-# Reference projects to ignore
-reference-Qwen-VL-Series-Finetune/
+# claude settings
+.claude/*

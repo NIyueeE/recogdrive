@@ -1,111 +1,133 @@
 # ReCogDrive Training and Evaluation
 
-## Stage 1: Vision-Language Models Driving Pretraining
+## Three-Stage Training
 
-First, you need to download **13 QA datasets** (e.g., *DriveLM*, *LingoQA*, etc.) as mentioned in the paper.  
-Due to dataset privacy policies, we are currently unable to release the JSON files. These files may be released later if permission is granted by the dataset authors. Once obtained, you should configure the corresponding JSON files under `./internvl_chat/shell/data_info`.
+ReCogDrive uses a unified three-stage training architecture:
 
-You can also generate the **ReCogDrive dataset on NAVSIM** following the steps below:
+1. **Stage 1**: VLM Supervised Fine-tuning
+2. **Stage 2**: DiT Imitation Learning
+3. **Stage 3**: DiffGRPO Reinforcement Learning
 
-```bash
-cd ./scripts
-sh generate_dataset/generate_internvl_dataset.sh              # trajectory dataset
-sh generate_dataset/generate_internvl_dataset_pipeline.sh     # auto-labeled dataset with pipeline
-```
-Note: Before running the pipeline script, you need to deploy the corresponding VLM using vllm or Sglang for automatic generation.
+---
 
-Next, download the **InternVL pretrained weights** from HuggingFace:  
-👉 [InternVL3-2B Weights](https://huggingface.co/OpenGVLab/InternVL3-2B)
-👉 [InternVL3-8B Weights](https://huggingface.co/OpenGVLab/InternVL3-8B)
+## Stage 1: VLM Supervised Fine-tuning
 
-After downloading, go to `./internvl_chat/shell/internvl3.0/2nd_finetune` and configure the training script.  
-You can launch the pretraining process with the following commands:
+### Download Data and Prepare
 
 ```bash
-cd /path/to/internvl_chat
-sh ./shell/internvl3.0/2nd_finetune/internvl3_8b_dynamic_res_2nd_finetune_recogdrive_pretrain.sh
+# Download NAVSIM data
+just download-navtrain
+just download-test
+
+# Generate trajectory data
+just data-generate-trajectory
 ```
 
-
-## Stage 2: Diffusion Planner Imitation Learning
-
-You can download our pretrained **ReCogDrive VLM** from [ReCogDrive VLM](https://huggingface.co/collections/owl10/recogdrive-68bafa143de172bab8de5752).  
-
-For the diffusion planner training, the first step is to **cache datasets for faster training**.  
-Since DiT training converges relatively slowly, training VLM and DiT jointly can be very time-consuming. To accelerate, we cache the hidden states output by the VLM, which enables much faster training.  
-> ⚠️ Note: Caching requires approximately **1–2 TB of disk space**. We are also working on faster training methods.  
-
-
-### Step 1: Cache hidden states
-```bash
-# cache dataset for training
-sh cache_dataset/run_caching_recogdrive_hidden_state.sh
-```
-
-### Step 2: Configure and run training
-
-Configure the script `training/run_recogdrive_train_multi_node_2b.sh` and then start training:
+### Training
 
 ```bash
-sh training/run_recogdrive_train_multi_node_2b.sh
+# Using just (recommended)
+just train-vlm --vlm-path /path/to/InternVL3-8B --data-path /path/to/data --num_gpus 8
+
+# Or using Python
+python -m src.recogdrive.training.stage1_vlm \
+    --vlm-path /path/to/InternVL3-8B \
+    --data-path /path/to/data \
+    --output-dir ./outputs/stage1_vlm \
+    --num_gpus 8 \
+    --num_epochs 3 \
+    --batch_size 8 \
+    --learning_rate 4e-5
 ```
 
-You can also enable **EMA (Exponential Moving Average)** during training for faster convergence. Note that this may lead to very slight performance degradation.
+---
+
+## Stage 2: DiT Imitation Learning
+
+### Cache Hidden States
 
 ```bash
-sh training/run_recogdrive_train_multi_node_ema_2b.sh
+just cache-hidden-state
 ```
 
-### Step 3: Configure and Run Evaluation
-
-After training is complete, you can configure the evaluation script and launch evaluation:
+### Training
 
 ```bash
-sh evaluation/run_recogdrive_agent_pdm_score_evaluation_2b.sh
+# Using just
+just train-dit --vlm-path /path/to/finetuned_vlm --data-path /path/to/navsim_data --num_gpus 8
+
+# Or using Python
+python -m src.recogdrive.training.stage2_dit \
+    --vlm-path /path/to/finetuned_vlm \
+    --data-path /path/to/navsim_data \
+    --output-dir ./outputs/stage2_dit \
+    --num_gpus 8 \
+    --num_epochs 200 \
+    --batch_size 16 \
+    --learning_rate 1e-4 \
+    --dit-type small \
+    --vlm-size large
 ```
 
-This will evaluate your trained agent using **PDM scores** on the navtest.
+---
 
+## Stage 3: DiffGRPO Reinforcement Learning
 
-
-
-## Stage 3: Diffusion Planner Reinforcement Learning Training
-
-In this stage, we perform **reinforcement learning (RL) training** on the Diffusion Planner  to further improve planning performance.
-
-### Step 1: Metric Caching
-
-First, you need to cache metrics for the training and test sets, which will be used for evaluation during RL training.
-
-> ⚠️ **Note:** As mentioned in [Issue #10](https://github.com/xiaomi-research/recogdrive/issues/10#issuecomment-3344730681), you **must use NumPy version 1.26.4 or above** to avoid potential errors during metric caching.
+### Cache Metrics
 
 ```bash
-# cache metrics for navtrain
-sh cache_dataset/run_metric_caching_train.sh
-
-# cache metrics for navtest
-sh cache_dataset/run_metric_caching.sh
+just cache-metrics-train
+just cache-metrics-test
 ```
 
-
-### Step 2: Configure and Launch RL Training
-
-After caching metrics, configure the RL training script and launch training:
+### Training
 
 ```bash
-# Example path to the RL training script
-sh training/run_recogdrive_train_multi_node_rl_2b.sh
+# Using just
+just train-rl --vlm-path /path/to/vlm --dit-path /path/to/dit --metric-cache /path/to/metrics
+
+# Or using Python
+python -m src.recogdrive.training.stage3_rl \
+    --vlm-path /path/to/finetuned_vlm \
+    --dit-path /path/to/stage2_checkpoint \
+    --metric-cache /path/to/metrics \
+    --output-dir ./outputs/stage3_rl \
+    --num_gpus 8 \
+    --num_epochs 10
 ```
 
-Before running, modify the script parameters as needed  according to your hardware and training requirements. This command will start RL training immediately after configuration.
+---
 
-
-### Step 3: Configure and Run Evaluation
-
-After training is complete, you can configure the evaluation script and launch evaluation:
+## Evaluation
 
 ```bash
-sh evaluation/run_recogdrive_agent_pdm_score_evaluation_2b.sh
-```
-This will evaluate your trained agent using **PDM scores** on the navtest.
+# 2B model
+just eval-2b
 
+# 8B model
+just eval-8b
+```
+
+---
+
+## Training Parameters
+
+| Stage | Model | Epochs | Batch Size | Learning Rate | GPUs |
+|-------|-------|--------|------------|---------------|------|
+| 1 | VLM (InternVL3-8B) | 3 | 8 | 4e-5 | 8 |
+| 2 | DiT | 200 | 16 | 1e-4 | 8 |
+| 3 | DiT (GRPO) | 10 | 8 | 1e-5 | 8 |
+
+---
+
+## Docker
+
+```bash
+# Build
+cd docker
+docker build -t recogdrive:latest .
+
+# Run
+docker run --gpus all -v /path/to/data:/data recogdrive:latest \
+    just train-vlm --vlm-path /path/to/model --data-path /data
+```

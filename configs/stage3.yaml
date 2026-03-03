@@ -1,0 +1,35 @@
+# Stage 3: DiffGRPO Reinforcement Learning Configuration
+
+stage: "stage3"
+
+# VLM Configuration
+vlm:
+  vlm_type: "internvl"
+  vlm_model_path: "/path/to/finetuned_internvl"
+  vlm_size: "large"
+
+# DiT Configuration
+dit:
+  dit_type: "small"
+  input_embedding_dim: 384
+  action_dim: 3
+  action_horizon: 8
+  sampling_method: "ddim"
+  num_inference_steps: 5
+
+# RL Configuration (Stage 3 specific)
+rl:
+  grpo: true
+  metric_cache_path: "/path/to/metric_cache"
+  reference_policy_checkpoint: "/path/to/il_model.ckpt"
+  num_samples: 8
+  kl_coef: 0.1
+  gamma_denoising: 0.6
+  denoised_clip_value: 1.0
+  randn_clip_value: 5.0
+
+# Training parameters for RL
+learning_rate: 1.0e-5
+num_train_epochs: 10
+per_device_batch_size: 8
+gradient_accumulation_steps: 1

@@ -1,0 +1,80 @@
+# ReCogDrive Default Configuration
+
+# Training stage (stage1, stage2, stage3)
+stage: "stage1"
+
+# Hardware configuration
+num_gpus: 8
+num_nodes: 1
+node_rank: 0
+master_addr: "localhost"
+master_port: 29500
+
+# Training hyperparameters
+learning_rate: 1.0e-4
+weight_decay: 0.05
+warmup_ratio: 0.1
+num_train_epochs: 3
+per_device_batch_size: 1
+gradient_accumulation_steps: 16
+max_steps: -1
+
+# Mixed precision
+bf16: true
+fp16: false
+grad_checkpoint: true
+max_grad_norm: 1.0
+
+# Logging
+logging_steps: 1
+save_steps: 500
+eval_steps: 500
+report_to: "tensorboard"
+
+# DeepSpeed
+deepspeed_config: null
+
+# VLM Configuration
+vlm:
+  vlm_type: "internvl"
+  vlm_model_path: ""
+  vlm_size: "large"
+  use_fast_tokenizer: false
+  torch_dtype: "bfloat16"
+  freeze_llm: false
+  freeze_mlp: false
+  freeze_backbone: false
+  force_image_size: 448
+  max_dynamic_patch: 16
+  down_sample_ratio: 0.5
+
+# DiT Configuration
+dit:
+  dit_type: "small"
+  input_embedding_dim: 384
+  action_dim: 3
+  action_horizon: 8
+  sampling_method: "ddim"
+  num_inference_steps: 5
+  dropout: 0.0
+
+# RL Configuration
+rl:
+  grpo: false
+  metric_cache_path: ""
+  reference_policy_checkpoint: ""
+  num_samples: 8
+  kl_coef: 0.1
+  gamma_denoising: 0.6
+
+# Data Configuration
+data:
+  data_path: ""
+  meta_path: ""
+  cache_dir: "./cache"
+  output_dir: "./outputs"
+  max_seq_length: 12288
+  group_by_length: true
+  dynamic_image_size: true
+  use_thumbnail: true
+  dataloader_num_workers: 32

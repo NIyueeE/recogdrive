@@ -1,0 +1,72 @@
+# ReCogDrive Docker Compose Configuration
+# Usage:
+#   Single GPU: docker-compose run --rm training
+#   Multi GPU:  docker-compose run --rm --scale training=8 training
+
+version: '3.8'
+
+services:
+  training:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: recogdrive:latest
+    container_name: recogdrive_training
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+      - PYTHONUNBUFFERED=1
+      - NCCL_DEBUG=INFO
+      - NCCL_IB_DISABLE=0
+      - NCCL_NET_GDR_LEVEL=2
+    volumes:
+      - ../data:/app/data
+      - ../models:/app/models
+      - ../cache:/app/cache
+      - ../outputs:/app/outputs
+      - ../navsim:/app/navsim
+      - ../internvl_chat:/app/internvl_chat
+    working_dir: /app
+    shm_size: '64g'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 8
+              capabilities: [gpu]
+    networks:
+      - recogdrive_net
+
+  # Multi-node training service
+  training-node:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: recogdrive:latest
+    container_name: recogdrive_node_${NODE_NAME:-node0}
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NODE_NAME=${NODE_NAME:-node0}
+      - MASTER_ADDR=${MASTER_ADDR:-localhost}
+      - MASTER_PORT=${MASTER_PORT:-29500}
+      - NODE_RANK=${NODE_RANK:-0}
+      - WORLD_SIZE=${WORLD_SIZE:-1}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ../data:/app/data
+      - ../models:/app/models
+      - ../cache:/app/cache
+      - ../outputs:/app/outputs
+    working_dir: /app
+    shm_size: '64g'
+    ipc_mode: host
+    networks:
+      - recogdrive_net
+
+networks:
+  recogdrive_net:
+    driver: bridge

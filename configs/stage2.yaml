@@ -1,0 +1,29 @@
+# Stage 2: DiT Imitation Learning Configuration
+
+stage: "stage2"
+
+# VLM Configuration
+vlm:
+  vlm_type: "internvl"
+  vlm_model_path: "/path/to/finetuned_internvl"
+  vlm_size: "large"
+
+# DiT Configuration
+dit:
+  dit_type: "small"
+  input_embedding_dim: 384
+  action_dim: 3
+  action_horizon: 8
+  sampling_method: "ddim"
+  num_inference_steps: 5
+  dropout: 0.0
+
+# Training parameters
+learning_rate: 1.0e-4
+num_train_epochs: 200
+per_device_batch_size: 16
+gradient_accumulation_steps: 1
+
+# RL disabled for imitation learning
+rl:
+  grpo: false

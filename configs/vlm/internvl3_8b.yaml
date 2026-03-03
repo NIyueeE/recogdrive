@@ -1,0 +1,26 @@
+# InternVL3-8B Configuration
+
+vlm_type: "internvl"
+vlm_model_path: "/path/to/InternVL3-8B"
+vlm_size: "large"
+
+# Model architecture details
+model_config:
+  hidden_dim: 3584
+  num_layers: 32
+  vision_hidden_size: 2560
+
+# Training settings
+freeze_llm: false
+freeze_mlp: false
+freeze_backbone: false
+
+# Vision settings
+force_image_size: 448
+max_dynamic_patch: 16
+down_sample_ratio: 0.5
+drop_path_rate: 0.1
+vision_select_layer: -1
+
+# Tokenizer
+use_fast_tokenizer: false

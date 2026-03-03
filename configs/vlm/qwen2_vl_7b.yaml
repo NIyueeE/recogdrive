@@ -1,0 +1,23 @@
+# Qwen2-VL-7B Configuration
+
+vlm_type: "qwen"
+vlm_model_path: "/path/to/Qwen2-VL-7B"
+vlm_size: "large"
+
+# Model architecture details
+model_config:
+  hidden_dim: 3584
+  num_layers: 28
+  vision_hidden_size: 1536
+
+# Training settings
+freeze_llm: false
+freeze_mlp: false
+freeze_backbone: false
+
+# Vision settings
+force_image_size: 448
+max_dynamic_patch: 6
+
+# Tokenizer
+use_fast_tokenizer: false
