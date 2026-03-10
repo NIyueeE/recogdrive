@@ -1,0 +1,81 @@
+# ReCogDrive Minimal Training Configuration
+# This config is designed for pipeline validation with minimal resources
+
+# Training stage
+stage: "stage1"
+
+# Hardware configuration - minimal for testing
+num_gpus: 1
+num_nodes: 1
+node_rank: 0
+master_addr: "localhost"
+master_port: 29500
+
+# Training hyperparameters - minimal for quick testing
+learning_rate: 1.0e-4
+weight_decay: 0.05
+warmup_ratio: 0.0
+num_train_epochs: 1
+per_device_batch_size: 1
+gradient_accumulation_steps: 1
+max_steps: 10
+
+# Mixed precision - use fp32 for CPU testing
+bf16: false
+fp16: false
+grad_checkpoint: false
+max_grad_norm: 1.0
+
+# Logging - frequent for testing
+logging_steps: 1
+save_steps: 100
+eval_steps: 100
+report_to: "tensorboard"
+
+# DeepSpeed - disabled for testing
+deepspeed_config: null
+
+# VLM Configuration - use mock mode
+vlm:
+  vlm_type: "internvl"
+  vlm_model_path: "mock"  # Use mock mode
+  vlm_size: "small"
+  use_fast_tokenizer: false
+  torch_dtype: "float32"
+  freeze_llm: false
+  freeze_mlp: false
+  freeze_backbone: false
+  force_image_size: 224
+  max_dynamic_patch: 1
+  down_sample_ratio: 1.0
+
+# DiT Configuration - minimal
+dit:
+  dit_type: "small"
+  input_embedding_dim: 384
+  action_dim: 3
+  action_horizon: 8
+  sampling_method: "ddim"
+  num_inference_steps: 5
+  dropout: 0.0
+
+# RL Configuration - disabled for stage1
+rl:
+  grpo: false
+  metric_cache_path: ""
+  reference_policy_checkpoint: ""
+  num_samples: 8
+  kl_coef: 0.1
+  gamma_denoising: 0.6
+
+# Data Configuration - minimal paths
+data:
+  data_path: "./data/mini"
+  meta_path: ""
+  cache_dir: "./cache"
+  output_dir: "./outputs/mini"
+  max_seq_length: 2048
+  group_by_length: false
+  dynamic_image_size: false
+  use_thumbnail: false
+  dataloader_num_workers: 0

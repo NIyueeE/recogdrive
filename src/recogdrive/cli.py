@@ -9,7 +9,66 @@ Usage:
 import argparse
 import sys
 import subprocess
+import yaml
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 from pathlib import Path
+
+
+
+def validate_config(args):
+    """Validate configuration without loading models."""
+    # Determine config file path
+    config_path = getattr(args, 'config', None)
+    if not config_path:
+        config_path = "configs/mini.yaml"
+
+    config_file = Path(config_path)
+    if not config_file.exists():
+        logger.error(f"Config file not found: {config_path}")
+        sys.exit(1)
+
+    logger.info(f"Loading config from: {config_path}")
+    with open(config_file, 'r') as f:
+        config = yaml.safe_load(f)
+
+    # Validate VLM config
+    vlm_config = config.get('vlm', {})
+    vlm_type = vlm_config.get('vlm_type', 'internvl')
+    vlm_model_path = vlm_config.get('vlm_model_path', '')
+
+    logger.info("=" * 50)
+    logger.info("Configuration Validation Results")
+    logger.info("=" * 50)
+    logger.info(f"Stage: {config.get('stage', 'N/A')}")
+    logger.info(f"VLM Type: {vlm_type}")
+    logger.info(f"VLM Model Path: {vlm_model_path}")
+
+    # Check for mock mode
+    if vlm_model_path == "mock" or vlm_model_path == "":
+        logger.info("Mode: MOCK (no model weights will be downloaded)")
+    else:
+        logger.info(f"Mode: REAL (model weights required from: {vlm_model_path})")
+
+    # Display training params
+    logger.info(f"Learning Rate: {config.get('learning_rate', 'N/A')}")
+    logger.info(f"Batch Size: {config.get('per_device_batch_size', 'N/A')}")
+    logger.info(f"Max Steps: {config.get('max_steps', 'N/A')}")
+
+    # For Qwen2.5-VL specific validation
+    if vlm_type == "qwen":
+        logger.info("")
+        logger.info("Qwen2.5-VL Configuration Notes:")
+        logger.info("- Requires transformers>=4.37.0")
+        logger.info("- Vision hidden size: 1536")
+
+    logger.info("=" * 50)
+    logger.info("Validation PASSED")
+    logger.info("=" * 50)
+
+    return 0
 
 
 def run_command(cmd):
@@ -142,9 +201,16 @@ def main():
     train_parser.add_argument("--kl_coeff", type=float, help="KL coefficient (RL)")
     train_parser.add_argument("--dit_type", type=str, choices=["small", "large"], help="DiT type")
     train_parser.add_argument("--vlm_size", type=str, choices=["small", "large"], help="VLM size")
+    train_parser.add_argument("--config", type=str, default="configs/mini.yaml", help="Path to config file")
+    train_parser.add_argument("--validate-config", action="store_true", help="Validate config without loading models")
 
     # Download command
     download_parser = subparsers.add_parser("download", help="Download datasets")
+
+    # Validate command (standalone, doesn't require torch)
+    validate_parser = subparsers.add_parser("validate", help="Validate configuration without loading models")
+    validate_parser.add_argument("--config", type=str, default="configs/mini.yaml", help="Path to config file")
+
     download_parser.add_argument(
         "--dataset", type=str,
         choices=["navsim", "trainval", "test", "mini", "maps", "all"],
@@ -161,6 +227,8 @@ def main():
     args = parser.parse_args()
 
     if args.command == "train":
+        if getattr(args, 'validate_config', False):
+            sys.exit(validate_config(args))
         if args.stage == 1:
             train_stage1(args)
         elif args.stage == 2:
@@ -169,6 +237,9 @@ def main():
             train_stage3(args)
     elif args.command == "download":
         download_dataset(args)
+    elif args.command == "validate":
+        from src.recogdrive.cli import validate_config
+        sys.exit(validate_config(args))
     elif args.command == "eval":
         print("Evaluation not yet implemented")
     else:

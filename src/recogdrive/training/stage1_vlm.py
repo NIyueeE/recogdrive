@@ -7,18 +7,16 @@ import argparse
 import logging
 import os
 import sys
+import random
+import time
+import json
 from pathlib import Path
 from typing import Optional
 
-import torch
-import torch.distributed as dist
-from transformers import (
-    AutoModel,
-    AutoTokenizer,
-    Trainer,
-    TrainingArguments,
-    DataCollator,
-)
+# Conditional imports - only load heavy dependencies when needed
+# For mock mode, we use Python's standard library only
+torch = None
+dist = None
 
 from ..config import TrainingConfig, ConfigLoader
 from ..vlm import create_vlm
@@ -103,7 +101,12 @@ def setup_logging():
 
 def setup_distributed():
     """Initialize distributed training if available"""
+    global torch, dist
     if "RANK" in os.environ and "WORLD_SIZE" in os.environ:
+        # Lazy import torch and dist when actually needed for distributed training
+        import torch
+        import torch.distributed as dist
+
         rank = int(os.environ["RANK"])
         world_size = int(os.environ["WORLD_SIZE"])
         local_rank = int(os.environ.get("LOCAL_RANK", 0))
@@ -114,6 +117,105 @@ def setup_distributed():
         logger.info(f"Distributed training: rank={rank}, world_size={world_size}")
         return True
     return False
+
+
+def run_mock_training(args, config):
+    """Run mock training with dummy model and data for pipeline validation.
+
+    This function simulates a training loop without requiring PyTorch or other
+    heavy dependencies. It uses Python's standard library for reproducibility.
+    """
+    logger.info("Initializing mock training...")
+
+    # Create a simple dummy model (just parameters, no actual weights)
+    hidden_dim = config.vlm.get_hidden_dim()
+    logger.info(f"Creating mock model with hidden_dim={hidden_dim}")
+
+    # Simulate model parameters using Python's random (no torch needed)
+    random.seed(42)
+    dummy_model_params = {
+        "vision_encoder": [[random.random() for _ in range(hidden_dim)] for _ in range(100)],
+        "mlp_projector": [[random.random() for _ in range(hidden_dim)] for _ in range(hidden_dim)],
+        "language_model": [[random.random() for _ in range(hidden_dim)] for _ in range(1000)],
+    }
+
+    # Create dummy dataset (5 samples)
+    num_samples = 5
+    logger.info(f"Creating mock dataset with {num_samples} samples")
+
+    # Simulate training loop
+    max_steps = 10
+    batch_size = args.batch_size if hasattr(args, 'batch_size') else 1
+
+    logger.info(f"Starting mock training for {max_steps} steps, batch_size={batch_size}")
+
+    training_history = []
+    for step in range(max_steps):
+        step_start = time.time()
+
+        # Simulate forward pass - compute random loss
+        # Use deterministic seed for reproducibility
+        random.seed(42 + step)
+        loss = random.random() * 0.5 + 0.5  # Loss between 0.5 and 1.0
+
+        # Simulate optimizer step
+        learning_rate = config.learning_rate
+
+        step_time = time.time() - step_start
+
+        # Log progress
+        logger.info(
+            f"Step {step + 1}/{max_steps} | "
+            f"Loss: {loss:.4f} | "
+            f"LR: {learning_rate:.2e} | "
+            f"Time: {step_time:.3f}s"
+        )
+
+        training_history.append({
+            "step": step + 1,
+            "loss": loss,
+            "learning_rate": learning_rate,
+            "step_time": step_time
+        })
+
+        # Simulate saving checkpoint every 5 steps
+        if (step + 1) % 5 == 0:
+            checkpoint_path = Path(config.data.output_dir) / f"checkpoint-step-{step + 1}"
+            checkpoint_path.mkdir(parents=True, exist_ok=True)
+
+            # Save dummy checkpoint
+            checkpoint_file = checkpoint_path / "trainer_state.json"
+            with open(checkpoint_file, "w") as f:
+                json.dump({
+                    "global_step": step + 1,
+                    "epoch": (step + 1) / max_steps,
+                    "loss": loss,
+                }, f, indent=2)
+
+            logger.info(f"Saved checkpoint to {checkpoint_path}")
+
+    # Save final training summary
+    summary_path = Path(config.data.output_dir) / "training_summary.json"
+    with open(summary_path, "w") as f:
+        json.dump({
+            "total_steps": max_steps,
+            "final_loss": training_history[-1]["loss"] if training_history else None,
+            "avg_loss": sum(h["loss"] for h in training_history) / len(training_history) if training_history else None,
+            "total_time": sum(h["step_time"] for h in training_history),
+            "config": {
+                "batch_size": batch_size,
+                "learning_rate": config.learning_rate,
+                "hidden_dim": hidden_dim,
+            }
+        }, f, indent=2)
+
+    logger.info("=" * 50)
+    logger.info("Mock training completed successfully!")
+    logger.info(f"Final loss: {training_history[-1]['loss']:.4f}")
+    logger.info(f"Average loss: {sum(h['loss'] for h in training_history) / len(training_history):.4f}")
+    logger.info(f"Total time: {sum(h['step_time'] for h in training_history):.2f}s")
+    logger.info(f"Summary saved to: {summary_path}")
+    logger.info("=" * 50)
 
 
 def main():
@@ -158,10 +260,11 @@ def main():
     logger.info(f"Batch Size: {args.batch_size}")
     logger.info(f"Precision: {'bf16' if config.bf16 else 'fp16' if config.fp16 else 'fp32'}")
 
-    # Check paths
-    if not os.path.exists(config.vlm.vlm_model_path):
-        logger.error(f"VLM model path does not exist: {config.vlm.vlm_model_path}")
-        sys.exit(1)
+    # Check paths - skip for mock mode
+    if config.vlm.vlm_model_path != "mock":
+        if not os.path.exists(config.vlm.vlm_model_path):
+            logger.error(f"VLM model path does not exist: {config.vlm.vlm_model_path}")
+            sys.exit(1)
 
     if not os.path.exists(config.data.data_path):
         logger.error(f"Data path does not exist: {config.data.data_path}")
@@ -174,19 +277,24 @@ def main():
     logger.info("Starting training...")
     logger.info("=" * 50)
 
-    # TODO: Implement actual training logic
-    # - Load tokenizer
-    # - Load dataset
-    # - Initialize model
-    # - Setup Trainer
-    # - Run training
+    # Check if running in mock mode
+    if config.vlm.vlm_model_path == "mock":
+        logger.info("Running in MOCK mode - using dummy model and data")
+        run_mock_training(args, config)
+    else:
+        # TODO: Implement actual training logic
+        # - Load tokenizer
+        # - Load dataset
+        # - Initialize model
+        # - Setup Trainer
+        # - Run training
 
-    logger.info("Training configuration prepared successfully!")
-    logger.info(f"Use this command to run training with DeepSpeed:")
-    logger.info(f"  deepspeed --num_gpus={args.num_gpus} src/recogdrive/training/stage1_vlm.py \\")
-    logger.info(f"    --vlm-path {args.vlm_path} \\")
-    logger.info(f"    --data-path {args.data_path} \\")
-    logger.info(f"    --output-dir {args.output_dir}")
+        logger.info("Training configuration prepared successfully!")
+        logger.info(f"Use this command to run training with DeepSpeed:")
+        logger.info(f"  deepspeed --num_gpus={args.num_gpus} src/recogdrive/training/stage1_vlm.py \\")
+        logger.info(f"    --vlm-path {args.vlm_path} \\")
+        logger.info(f"    --data-path {args.data_path} \\")
+        logger.info(f"    --output-dir {args.output_dir}")
 
 
 if __name__ == "__main__":

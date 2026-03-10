@@ -18,3 +18,12 @@
 
 # claude settings
 .claude/*
+.ralph/*
+.ralphrc
+
+# outputs
+outputs/
+
+# Python bytecode
+*.py[cod]
+*$py.class

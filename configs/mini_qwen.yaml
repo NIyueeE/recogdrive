@@ -1,0 +1,37 @@
+# ReCogDrive Minimal Training Configuration with Qwen2.5-VL
+# This config validates Qwen2.5-VL configuration without downloading weights
+
+# Training stage
+stage: "stage1"
+
+# Hardware configuration
+num_gpus: 1
+num_nodes: 1
+
+# Training hyperparameters
+learning_rate: 1.0e-4
+weight_decay: 0.05
+num_train_epochs: 1
+per_device_batch_size: 1
+max_steps: 10
+
+# VLM Configuration - Qwen2.5-VL
+vlm:
+  vlm_type: "qwen"
+  vlm_model_path: "Qwen/Qwen2.5-VL-7B-Instruct"  # HuggingFace model ID (not downloaded)
+  vlm_size: "7b"
+  use_fast_tokenizer: false
+  torch_dtype: "float32"
+  force_image_size: 448
+  max_dynamic_patch: 6
+
+# DiT Configuration
+dit:
+  dit_type: "small"
+  input_embedding_dim: 384
+  action_dim: 3
+
+# Data Configuration
+data:
+  data_path: "./data/mini"
+  output_dir: "./outputs/mini"
