@@ -6,31 +6,44 @@ Defines the unified interface for Vision-Language Models
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
-import torch
-import torch.nn as nn
+
+# Lazy import torch - only loaded when actually needed
+# This allows mock mode to work without torch installed
+torch = None
+nn = None
+
+
+def _ensure_torch():
+    """Lazy import torch when needed"""
+    global torch, nn
+    if torch is None:
+        import torch
+        import torch.nn as nn
+    return torch, nn
 
 
 @dataclass
 class VLMOutput:
     """Output from VLM encoding"""
-    hidden_states: torch.Tensor
+    hidden_states: Any  # torch.Tensor - but defined lazily
     """Last hidden states, shape: [batch_size, seq_len, hidden_dim]"""
 
-    logits: Optional[torch.Tensor] = None
+    logits: Any = None  # Optional[torch.Tensor]
     """Logits from language head, shape: [batch_size, seq_len, vocab_size]"""
 
-    attention_mask: Optional[torch.Tensor] = None
+    attention_mask: Any = None  # Optional[torch.Tensor]
     """Attention mask for the sequence"""
 
-    pixel_values: Optional[torch.Tensor] = None
+    pixel_values: Any = None  # Optional[torch.Tensor]
     """Processed pixel values"""
 
     def __getitem__(self, key: str) -> Any:
         """Allow dictionary-like access"""
         return getattr(self, key)
 
-    def to(self, device: torch.device) -> "VLMOutput":
+    def to(self, device: Any) -> "VLMOutput":
         """Move output to device"""
+        torch, _ = _ensure_torch()
         return VLMOutput(
             hidden_states=self.hidden_states.to(device),
             logits=self.logits.to(device) if self.logits is not None else None,
@@ -39,7 +52,7 @@ class VLMOutput:
         )
 
 
-class VLMBase(ABC, nn.Module):
+class VLMBase(ABC):
     """
     Base class for Vision-Language Models.
 
@@ -58,15 +71,38 @@ class VLMBase(ABC, nn.Module):
         """
         super().__init__()
         self.model_path = model_path
-        self.device = torch.device(device)
+        self._device = device
         self._hidden_dim: Optional[int] = None
+        self._torch = None
+        self._nn = None
+
+    @property
+    def torch(self):
+        """Lazy load torch"""
+        if self._torch is None:
+            self._torch, self._nn = _ensure_torch()
+        return self._torch
+
+    @property
+    def nn(self):
+        """Lazy load nn"""
+        if self._nn is None:
+            self._torch, self._nn = _ensure_torch()
+        return self._nn
+
+    @property
+    def device(self):
+        """Get device"""
+        if self._device == "cuda":
+            return self.torch.device("cuda")
+        return self.torch.device("cpu")
 
     @abstractmethod
     def encode_image(
         self,
-        pixel_values: torch.Tensor,
+        pixel_values: Any,
         prompts: Optional[List[str]] = None,
-    ) -> VLMOutput:
+    ) -> "VLMOutput":
         """
         Encode images using the VLM
 
@@ -82,9 +118,9 @@ class VLMBase(ABC, nn.Module):
     @abstractmethod
     def encode_text(
         self,
-        input_ids: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-    ) -> VLMOutput:
+        input_ids: Any,
+        attention_mask: Optional[Any] = None,
+    ) -> "VLMOutput":
         """
         Encode text using the VLM
 
@@ -100,11 +136,11 @@ class VLMBase(ABC, nn.Module):
     @abstractmethod
     def forward(
         self,
-        pixel_values: Optional[torch.Tensor] = None,
-        input_ids: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        pixel_values: Optional[Any] = None,
+        input_ids: Optional[Any] = None,
+        attention_mask: Optional[Any] = None,
         prompts: Optional[List[str]] = None,
-    ) -> VLMOutput:
+    ) -> "VLMOutput":
         """
         Full forward pass
 
@@ -144,7 +180,7 @@ class VLMBase(ABC, nn.Module):
         self,
         images: Any,
         size: Optional[Tuple[int, int]] = None,
-    ) -> torch.Tensor:
+    ) -> Any:
         """
         Preprocess images for the model
 
@@ -168,14 +204,14 @@ class VLMBase(ABC, nn.Module):
         """Return model configuration"""
         return {
             "model_path": self.model_path,
-            "device": str(self.device),
+            "device": self._device,
             "hidden_dim": self.get_hidden_dim(),
             "name": self.name,
         }
 
     def generate(
         self,
-        pixel_values: torch.Tensor,
+        pixel_values: Any,
         prompts: List[str],
         max_new_tokens: int = 512,
         temperature: float = 1.0,
@@ -199,9 +235,9 @@ class VLMBase(ABC, nn.Module):
 
     def extract_features(
         self,
-        pixel_values: torch.Tensor,
+        pixel_values: Any,
         layer: int = -1,
-    ) -> torch.Tensor:
+    ) -> Any:
         """
         Extract features from a specific layer
 
@@ -222,20 +258,22 @@ class VLMCacheMixin:
     def __init__(self, *args, cache_dir: Optional[str] = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.cache_dir = cache_dir
-        self._cache: Dict[str, torch.Tensor] = {}
+        self._cache: Dict[str, Any] = {}
 
-    def load_from_cache(self, key: str) -> Optional[torch.Tensor]:
+    def load_from_cache(self, key: str) -> Optional[Any]:
         """Load features from cache"""
         if self.cache_dir is None:
             return None
+        torch, _ = _ensure_torch()
         cache_path = f"{self.cache_dir}/{key}.pt"
         if torch.exists(cache_path):
             return torch.load(cache_path)
         return None
 
-    def save_to_cache(self, key: str, features: torch.Tensor):
+    def save_to_cache(self, key: str, features: Any):
         """Save features to cache"""
         if self.cache_dir is None:
             return
+        torch, _ = _ensure_torch()
         cache_path = f"{self.cache_dir}/{key}.pt"
         torch.save(features, cache_path)

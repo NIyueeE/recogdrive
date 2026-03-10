@@ -9,7 +9,9 @@ import os
 import sys
 from typing import Optional
 
-import torch
+# Lazy import torch - only loaded when actually needed
+# This allows mock mode to work without torch installed
+torch = None
 
 from ..config import TrainingConfig, ConfigLoader
 from ..vlm import create_vlm
@@ -99,8 +101,26 @@ def main():
     logger.info(f"Output Dir: {config.data.output_dir}")
     logger.info(f"Epochs: {config.num_train_epochs}")
 
+    # Check paths - skip for mock mode
+    if config.vlm.vlm_model_path != "mock":
+        if not os.path.exists(config.vlm.vlm_model_path):
+            logger.error(f"VLM model path does not exist: {config.vlm.vlm_model_path}")
+            sys.exit(1)
+
+    if not os.path.exists(config.data.data_path):
+        logger.error(f"Data path does not exist: {config.data.data_path}")
+        sys.exit(1)
+
     # Create output directory
     os.makedirs(config.data.output_dir, exist_ok=True)
+
+    # Handle mock mode for testing
+    if config.vlm.vlm_model_path == "mock":
+        logger.info("=" * 50)
+        logger.info("Running in MOCK mode - no actual training")
+        logger.info("DiT training configuration prepared successfully!")
+        logger.info("=" * 50)
+        return
 
     logger.info("=" * 50)
     logger.info("Starting DiT training...")

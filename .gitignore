@@ -19,7 +19,6 @@
 # claude settings
 .claude/*
 .ralph/*
-.ralphrc
 
 # outputs
 outputs/
